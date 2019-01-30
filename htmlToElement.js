@@ -33,7 +33,7 @@ const Img = props => {
     width,
     height,
   };
-  return <AutoSizedImage source={source} style={imgStyle} />;
+  return <AutoSizedImage source={source} style={imgStyle} userStyle={props.style || {}} />;
 };
 
 export default function htmlToElement(rawHtml, customOpts = {}, done) {
@@ -86,7 +86,7 @@ export default function htmlToElement(rawHtml, customOpts = {}, done) {
 
       if (node.type === 'tag') {
         if (node.name === 'img') {
-          return <Img key={index} attribs={node.attribs} />;
+          return <Img key={index} attribs={node.attribs} style={opts.styles.img || {}}/>;
         }
 
         let linkPressHandler = null;

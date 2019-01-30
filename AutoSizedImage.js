@@ -4,7 +4,6 @@ import {
   Dimensions,
 } from 'react-native';
 
-const {width} = Dimensions.get('window');
 
 const baseStyle = {
   backgroundColor: 'transparent',
@@ -18,39 +17,47 @@ export default class AutoSizedImage extends PureComponent {
       // You must specify a width and height for the image %s
       width: this.props.style.width || 1,
       height: this.props.style.height || 1,
+      mount: false
     };
   }
 
   componentDidMount() {
-    //avoid repaint if width/height is given
-    if (this.props.style.width || this.props.style.height) {
-      return;
-    }
     Image.getSize(this.props.source.uri, (w, h) => {
-      this.setState({width: w, height: h});
+      this.setState({width: w, height: h, mount: true});
     });
   }
 
   render() {
-    const finalSize = {};
-    if (this.state.width > width) {
+    const finalSize = {
+      width: this.state.width,
+      height: this.state.height
+    };
+    const { width, height, ...rest } = this.props.userStyle || {};
+
+    const ratio = finalSize.width / finalSize.height;
+
+    if (finalSize.width > width) {
       finalSize.width = width;
-      const ratio = width / this.state.width;
-      finalSize.height = this.state.height * ratio;
+      finalSize.height = finalSize.width / ratio;
+    }
+    if (finalSize.height > height) {
+      finalSize.height = height;
+      finalSize.width = finalSize.height * ratio;
     }
     const style = Object.assign(
       baseStyle,
       this.props.style,
-      this.state,
-      finalSize
+      { width: this.state.width, height: this.state.height },
+      finalSize,
+      (rest || {})
     );
     let source = {};
     if (!finalSize.width || !finalSize.height) {
-      source = Object.assign(source, this.props.source, this.state);
+      source = Object.assign(source, this.props.source, { width: this.state.width, height: this.state.height });
     } else {
       source = Object.assign(source, this.props.source, finalSize);
     }
 
-    return <Image style={style} source={source} />;
+    return this.state.mount ? <Image style={style} source={source} /> : null;
   }
 }
